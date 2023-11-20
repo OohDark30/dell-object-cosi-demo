@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cosi-demo-deployment
+  namespace: cosi-demo-ns
+  labels:
+    app: cosidemoapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cosidemoapp
+  template:
+    metadata:
+      labels:
+        app: cosidemoapp
+    spec:
+      containers:
+        - name: cosidemoapp
+          image: oohdark30/dell-cosi
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+            - name: cosi-secrets
+              mountPath: /data/cosi
+              readOnly: true
+      volumes:
+        - name: cosi-secrets
+          secret:
+            secretName: <replace_with_name_of_cosi_provisioned_bucket_k8s_secret>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cosidemo-service
+  namespace: cosi-demo-ns
+spec:
+  ports:
+    - port: 5000
+      protocol: TCP
+      targetPort: 5000
+  selector:
+    app: cosidemoapp
+  type: LoadBalancer
