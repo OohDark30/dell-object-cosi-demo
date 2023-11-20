@@ -23,9 +23,6 @@ RUN mkdir -p /data/cosi
 ADD app.py /app
 ADD minimal /app/minimal
 
-# Remove after development
-#ADD BucketInfo /data/cosi
-
 ENV VIRTUAL_ENV /env
 ENV PATH /env/bin:$PATH
 
