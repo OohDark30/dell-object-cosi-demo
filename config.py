@@ -1,10 +1,10 @@
 KAFKA_SWITCH_CHECK_CHECKED = True,
-KAFKA_BROKER = '10.246.151.171:9092'
-KAFKA_TOPIC = 'objectscale-event-notifications'
+KAFKA_BROKER = 'xx.xx.xx.xx:9092'
+KAFKA_TOPIC = 'kafkatopic1'
 KAFKA_AUTO_RESET = 'earliest'
-KAFKA_CONSUMER_GROUP = 'objectscale-demo-consumer-group'
+KAFKA_CONSUMER_GROUP = 'kafka-consumer-group'
 S3_METADATA_SWITCH_CHECK_CHECKED = True,
-S3_ENDPOINT = 'http://10.243.45.117:80'
-S3_ACCESS_KEY = 'OKIA520879E7D1358CCE'
-S3_SECRET_KEY = '6UWp4h4sABSg8/ZWihqidnuLLcbbxb/4c8vVqxQB'
-S3_BUCKET = 'bucket-confluent'
+S3_ENDPOINT = 'http://xx.xx.xx.xx:80'
+S3_ACCESS_KEY = ''
+S3_SECRET_KEY = ''
+S3_BUCKET = 'bucket01'
