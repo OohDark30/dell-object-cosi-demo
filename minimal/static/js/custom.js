@@ -122,7 +122,26 @@ async function getObjects() {
                     locale: $(this).val()
                 });
             }
-        }
+        },
+        error: function (jqXHR, exception) {
+            var msg = '';
+            if (jqXHR.status === 0) {
+                msg = 'Not connect.\n Verify Network.';
+            } else if (jqXHR.status == 404) {
+                msg = 'Requested page not found. [404]';
+            } else if (jqXHR.status == 500) {
+                msg = 'Internal Server Error [500].';
+            } else if (exception === 'parsererror') {
+                msg = 'Requested JSON parse failed.';
+            } else if (exception === 'timeout') {
+                msg = 'Time out error.';
+            } else if (exception === 'abort') {
+                msg = 'Ajax request aborted.';
+            } else {
+                msg = 'Uncaught Error.\n' + jqXHR.responseText;
+            }
+            $('#post').html(msg);
+        },
     });
 }
 
@@ -240,4 +259,75 @@ function totalSizeFormatter(data) {
         totalSize = totalSize / 1024
     }
     return totalSize.toFixed(2) + ' KB'
+}
+
+async function sendTestEvent() {
+
+    // Create test event json
+    const testEventData = '{"Records":[{"eventVersion":"2.2","eventSource":"aws:s3","awsRegion":"osci6f2aaa342523e77b","eventTime":"2023-12-16T20:15:03.406Z","eventName":"s3:ObjectCreated:Put","userIdentity":{"principalId":"urn:osc:iam::osaid2af1554252c9173:user/user2-cosi"},"requestParameters":{"sourceIPAddress":"10.243.45.15"},"responseElements":{"x-amz-request-id":"c0a84fa3:18ae1b9e066:a13d:199","x-amz-id-2":"3a6fe5c5bf346f3eeaf7a63c1f3fb4fdf66ec36c933f689c16f4905cde1bd414"},"s3":{"s3SchemaVersion":"1.0","configurationId":"cosidemowebhook","bucket":{"name":"bucket-confluent","ownerIdentity":{"principalId":"urn:osc:iam::osaid2af1554252c9173:root"},"arn":"arn:aws:s3:osci6f2aaa342523e77b:osti5fd59b5500bd68cc:bucket-confluent"},"object":{"key":"jinjafilters.py","size":"911","etag":"fc44b090992620a44d94671ada56cc08","sequencer":"8000000000032e492"}}}]}'
+
+    // Grab the form data and the messasge text area element
+    let exampleFormControlTextarea1 = document.getElementById("exampleFormControlTextarea1");
+    let formData = new FormData();
+
+    // Add the test data to the form data
+    formData.append("testdata", testEventData);
+    formData.append("exampleFormControlTextarea1", exampleFormControlTextarea1.value);
+
+    // Send the request to the server
+    let resp = await fetch('/webhook', {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json;charset=utf-8'
+        },
+        body: testEventData
+    });
+    if (resp.status != 200) {
+        alert("Configuration Update failed!");
+    }
+}
+
+async function updateDemoConfiguration() {
+    let formData = new FormData(document.getElementById("cosiformconfiguration"));
+    let kafkaSwitch = document.getElementById("kafkaSwitchCheckChecked");
+    let kafkaBroker = document.getElementById("kafkaBroker");
+    let kafkaTopic = document.getElementById("kafkaTopic");
+
+    let objectSwitch = document.getElementById("objectSwitchCheckChecked");
+    let objectEndpoint = document.getElementById("objectEndpoint");
+    let objectAccessKey = document.getElementById("objectAccessKey");
+    let objectSecretKey = document.getElementById("objectSecretKey");
+    let objectBucket = document.getElementById("objectBucket");
+
+    if (kafkaSwitch.checked) {
+        formData.append("kafkaSwitch", "True");
+    }
+    else {
+        formData.append("kafkaSwitch", "False");
+    }
+
+    if (objectSwitch.checked) {
+        formData.append("objectSwitch", "True");
+    }
+    else {
+        formData.append("objectSwitch", "False");
+    }
+
+    formData.append("kafkaBroker", kafkaBroker.value);
+    formData.append("kafkaTopic", kafkaTopic.value);
+    formData.append("objectSwitch", objectSwitch.value);
+    formData.append("objectEndpoint", objectEndpoint.value);
+    formData.append("objectAccessKey", objectAccessKey.value);
+    formData.append("objectSecretKey", objectSecretKey.value);
+    formData.append("objectBucket", objectBucket.value);
+
+    // Send the request to the server
+    let resp = await fetch('/configuration', {
+        method: "POST",
+        body: formData
+    });
+
+    if (resp.status != 200) {
+        alert("Configuration Update failed!");
+    }
 }

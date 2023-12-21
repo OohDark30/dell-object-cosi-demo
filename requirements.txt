@@ -9,3 +9,6 @@ MarkupSafe==2.1.1
 Werkzeug==3.0.1
 zipp==3.17.0
 boto3==1.28.75
+Flask-SocketIO==5.3.6
+avro-python3==1.10.2
+confluent-kafka==2.3.0

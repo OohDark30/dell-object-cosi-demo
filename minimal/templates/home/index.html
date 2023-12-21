@@ -1,26 +1,26 @@
 {% extends "./base.html" %}
 
 {% block metatags %}
-<title xmlns="http://www.w3.org/1999/html">Dell Object Container Storage Interface (COSI)</title>
-<meta name="description" content="Explain Dell Object COSI Driver.">
+<title xmlns="http://www.w3.org/1999/html">Dell Object Storage - Demo Application</title>
+<meta name="description" content="Demonstrate Dell Object Storage Features.">
 {% endblock %}
 
 {% block contents %}
 <div class="container">
-    <h1 style="margin-top:37px;">Dell Object - Sample Application for K8S</h1>
-    <p class="lead">This site is a web based application that demonstrates the following:</p>
+    <h1 style="margin-top:37px;">Dell Object - Demo Application for K8S</h1>
+    <p class="lead">This site is a web based application that demonstrates the following Dell Object Storage Features:</p>
     <ol class="list-group list-group-numbered">
         <li class="list-group-item d-flex justify-content-between align-items-start">
             <div class="ms-2 me-auto">
-                <div class="fw-bold">COSI</div>
+                <div class="fw-bold">COSI Driver for ObjectScale</div>
                 Accessing COSI Provisioned Buckets on ObjectScale
             </div>
             <span class="badge bg-primary rounded-pill"></span>
         </li>
         <li class="list-group-item d-flex justify-content-between align-items-start">
             <div class="ms-2 me-auto">
-                <div class="fw-bold">Event Notifications</div>
-                Show how to receive event notifications from ObjectScale via Webhooks
+                <div class="fw-bold">Bucket Event Notifications</div>
+                Show how to receive event notifications from ObjectScale via Webhooks and optionally push to a Kafka Topic
             </div>
             <span class="badge bg-primary rounded-pill"></span>
         </li>
@@ -29,10 +29,13 @@
 <div class="container px-4">
     <ul class="nav nav-pills" id="myTab" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="cosi-tab" data-bs-toggle="tab" data-bs-target="#cosi" type="button" role="tab" aria-controls="cosi" aria-selected="true">COSI Demo</button>
+            <button class="nav-link active" id="cosi-tab" data-bs-toggle="tab" data-bs-target="#cosi" type="button" role="tab" aria-controls="cosi" aria-selected="true">COSI Driver for ObjectScale</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab" aria-controls="event" aria-selected="false">Event Notifications Demo</button>
+            <button class="nav-link" id="event-tab" data-bs-toggle="tab" data-bs-target="#event" type="button" role="tab" aria-controls="event" aria-selected="false">Bucket Event Notifications Demo</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="configuration-tab" data-bs-toggle="tab" data-bs-target="#config" type="button" role="tab" aria-controls="event" aria-selected="false">Demo Configuration</button>
         </li>
     </ul>
     <div class="tab-content" id="myTabContent">
@@ -53,23 +56,23 @@
                             </div>
                             <div class="mb-3">
                                 <label for="bucketclaim" class="form-label">COSI K8S Bucket Claim Name</label>
-                                <input class="form-control" type="text" readonly name="bucketclaim" value="bc-dbcf7778-efcc-47fb-9e3e-cad71f7500bb" aria-label="readonly input example" >
+                                <input class="form-control" type="text"  readonly name="bucketclaim" value="{{ results['bucketclaim'] }}" aria-label="readonly input example" >
                             </div>
                             <div class="mb-3">
                                 <label for="bucketname" class="form-label">COSI S3 Bucket Name</label>
-                                <input class="form-control" type="text" readonly name="bucketname" value="cosi-demo-bcsde75d039-9043-4a5e-8103-e1738c5464bc" aria-label="readonly input example" >
+                                <input class="form-control" type="text"  readonly name="bucketname" value="{{ results['bucketname'] }}" aria-label="readonly input example" >
                             </div>
                             <div class="mb-3">
-                                <label for="endpoint" class="form-label">COSI S3 Endpoint</label>
-                                <input class="form-control" type="text" readonly name="endpoint" value="https://10.243.45.117:80" aria-label="readonly input example" >
+                                <label for="endpoint" class="form-label">COSI S3 Endpoint (Note: This demo app will always alter the protocol to http and the port to 80 when performing s3 operations)</label>
+                                <input class="form-control" type="text"  name="endpoint" value="{{ results['endpoint'] }}" aria-label="readonly input example" >
                             </div>
                             <div class="mb-3">
                                 <label for="accesskey" class="form-label">COSI S3 Access Key</label>
-                                <input class="form-control" type="text" readonly name="accesskey" value="OKIA1AF34C62F16EDAD3" aria-label="readonly input example" >
+                                <input class="form-control" type="text"  readonly name="accesskey" value="{{ results['accesskey'] }}" aria-label="readonly input example" >
                             </div>
                             <div class="mb-3">
                                 <label for="secretkey" class="form-label">COSI S3 Secret Key</label>
-                                <input class="form-control" type="text" readonly name="secretkey" value="pKLtlTCuojWM4uw84R/ZbIVr4QsKBV8VDJJbNJA0" aria-label="readonly input example" >
+                                <input class="form-control" type="text"  readonly name="secretkey" value="{{ results['secretkey'] }}" aria-label="readonly input example" >
                             </div>
                             <p>Once we've successfully retrieved the details of the mounted K8S secret for our COSI provisioned bucket click the <strong>List Objects</strong> button to get a list of objects in the bucket and display some meta-data about them.</p>
                             <! -- create a button with an onclick event handler to call an ajax function -->
@@ -85,7 +88,16 @@
                                     let uploadButton = document.getElementById("upload-button");
                                     uploadButton.disabled = false;
                                 }
-
+                                function handleKafkaCheckboxClick(cb) {
+                                    document.getElementById("kafkaTopic").disabled = !cb.checked;
+                                    document.getElementById("kafkaBroker").disabled = !cb.checked;
+                                }
+                                function handleObjectCheckboxClick(cb) {
+                                    document.getElementById("objectEndpoint").disabled = !cb.checked;
+                                    document.getElementById("objectAccessKey").disabled = !cb.checked;
+                                    document.getElementById("objectSecretKey").disabled = !cb.checked;
+                                    document.getElementById("objectBucket").disabled = !cb.checked;
+                                }
                             </script>
                         </div>
                     </form>
@@ -168,6 +180,7 @@
                             <script src="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table-locale-all.min.js"></script>
                             <script src="https://unpkg.com/bootstrap-table@1.22.1/dist/extensions/export/bootstrap-table-export.min.js"></script>
                             <script src="https://unpkg.com/bootstrap-table@1.22.1/dist/locale/bootstrap-table-zh-CN.min.js"></script>
+                            <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" integrity="sha384-mZLF4UVrpi/QTWPA7BjNPEnkIfRFn4ZEO3Qt/HFklTJBj/gBOV8G3HcKn4NfQblz" crossorigin="anonymous"></script>
 
                         </div>
                     </div>
@@ -178,18 +191,104 @@
             <div class="col">
                 <div class="p-5 mb-4 bg-light rounded-3">
                     <h3 style="margin-top:37px;">Dell Object Event Notifications</h3>
-                    <p class="lead">In this section we will be listening for Object Event Notifications sent from ObjectScale via Webhook.  We'll parsed and log the received data. </p>
-                    <form>
-                        <div class="form-group">
-                            <label for="exampleFormControlTextarea1">Object Event Notifications Received via Webhook</label>
-                            <textarea class="form-control" id="exampleFormControlTextarea1" rows="10"></textarea>
+                    <p class="lead">In this section we will be listening for Bucket Event Notifications sent from ObjectScale via Webhook.  We'll log then grab the meta-data for the object from the bucket and push to a Kafka topic.</p>
+                    <form method="post" id="cosiformevents" enctype="multipart/form-data">
+                        <div class="container">
+                            <div class="form-group">
+                                <label for="exampleFormControlTextarea1">Object Event Notifications Received via Webhook</label>
+                                <textarea class="form-control" id="exampleFormControlTextarea1" rows="10" value="{{ results['eventdata'] }}"></textarea>
+                            </div>
+
+                            <script>
+                                $(document).ready(function(){
+                                    // Setup our socket connection
+                                    const eventnamespace = '/collectHooks';
+                                    const url = 'http://' + document.domain + ':' + location.port + eventnamespace;
+                                    const socket = io.connect(url);
+                                    // When connecting to the socket join the room
+                                    socket.on('connect', function(url) {
+                                        socket.emit('join_room');
+                                        console.log("Socker connected: " + socket.connected);
+                                        console.log("Socker connected: " + socket.id);
+                                    });
+                                    // When receiving a message
+                                    socket.on('msg', function(data) {
+                                        const eventdata = data.Records[0];
+                                        const msg = data;
+                                        let txtArea = document.getElementById("exampleFormControlTextarea1");
+                                        txtArea.value += eventdata.awsRegion + '::' + eventdata.eventTime + '::' + eventdata.eventName + '::' + eventdata.s3.bucket.name + '::' + eventdata.s3.object.key + '\r\n';
+
+                                    });
+                                    // When receiving a message
+                                    socket.on('kafkamsg', function(data) {
+                                        let txtArea = document.getElementById("exampleFormControlTextarea1");
+                                        txtArea.value += data + '\r\n';
+                                    });
+                                });
+                            </script>
+                            <p></p>
+                            <div class="mb-3">
+                                <button type="button" class="btn btn-success" onclick="sendTestEvent()">Send Test Event</button>
+                            </div>
                         </div>
                     </form>
                 </div>
             </div>
-
         </div>
+        <div class="tab-pane fade" id="config" role="tabpanel" aria-labelledby="configuration-tab">
+            <div class="col">
+                <div class="p-5 mb-4 bg-light rounded-3">
+                    <h3 style="margin-top:37px;">Dell Object Demo Configuration</h3>
+                    <p class="lead">Use this section to configure the behavior of the Dell Object Demo application. </p>
+                    <form method="post" id="cosiformconfiguration" enctype="multipart/form-data">
+                        <div class="container">
+                            <div class="input-group mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="kafkaSwitchCheckChecked" onclick="handleKafkaCheckboxClick(this)" checked="{{ results['kafkaenabledswitch'] }}">
+                                    <label class="form-check-label" for="kafkaSwitchCheckChecked">Push Events to Kafka?</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="kafkabroker" class="form-label">Kafka Bootstrap Server</label>
+                                <input class="form-control" type="text" {{ results['disablekafkabuttons'] }} name="kafkaBroker" id="kafkaBroker"  value="{{ results['kafkabroker'] }}" aria-label="readonly input example" >
+                            </div>
+                            <div class="mb-3">
+                                <label for="kafkatopic" class="form-label">Kafka Topic</label>
+                                <input class="form-control" type="text" {{ results['disablekafkabuttons'] }} name="kafkaTopic"  id="kafkaTopic" value="{{ results['kafkatopic'] }}" aria-label="readonly input example" >
+                            </div>
+                        </div>
 
+                        <div class="container">
+                            <div class="input-group mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="objectSwitchCheckChecked" onclick="handleObjectCheckboxClick(this)" checked="{{ results['objectenabledswitch'] }}">
+                                    <label class="form-check-label" for="objectSwitchCheckChecked">Extract Object Metadata?</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="objectEndpoint" class="form-label">S3 Object Endpoint</label>
+                                <input class="form-control" type="text" {{ results['disableobjectbuttons'] }} name="objectEndpoint" id="objectEndpoint"  value="{{ results['objectendpoint'] }}" aria-label="readonly input example" >
+                            </div>
+                            <div class="mb-3">
+                                <label for="objectAccessKey" class="form-label">S3 Access Key ID</label>
+                                <input class="form-control" type="text" {{ results['disableobjectbuttons'] }} name="objectAccessKey"  id="objectAccessKey" value="{{ results['objectaccesskey'] }}" aria-label="readonly input example" >
+                            </div>
+                            <div class="mb-3">
+                                <label for="objectSecretKey" class="form-label">S3 Secret Key</label>
+                                <input class="form-control" type="text" {{ results['disableobjectbuttons'] }} name="objectSecretKey" id="objectSecretKey"  value="{{ results['objectsecretkey'] }}" aria-label="readonly input example" >
+                            </div>
+                            <div class="mb-3">
+                                <label for="objectBucket" class="form-label">S3 Bucket</label>
+                                <input class="form-control" type="text" {{ results['disableobjectbuttons'] }} name="objectBucket"  id="objectBucket" value="{{ results['objectbucket'] }}" aria-label="readonly input example" >
+                            </div>
+                            <div class="mb-3">
+                                <button type="button" class="btn btn-success" onclick="updateDemoConfiguration()">Update Configuration</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
